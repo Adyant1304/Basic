@@ -30,7 +30,7 @@ from mtm import landing
 _at_home = not (st.session_state.get("ticker")
                 or st.session_state.get("show_sample"))
 st.set_page_config(
-    page_title="Mark to Market", page_icon="📈", layout="wide",
+    page_title="Mark to Market", layout="wide",
     initial_sidebar_state="collapsed" if _at_home else "expanded")
 st.markdown(T.CSS, unsafe_allow_html=True)
 
