@@ -1,0 +1,157 @@
+{
+  "ticker": "TMCV.NS",
+  "name": "Tata Motors Limited",
+  "sector": "Consumer Cyclical",
+  "industry": "Auto Manufacturers",
+  "currency": "INR",
+  "price": 418.1,
+  "shares_out": 3682789352.0,
+  "market_cap": 1539774218240.0,
+  "revenue": {
+    "label": "Total Revenue",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      833900000000.0,
+      577880000000.0,
+      4312120000000.0
+    ]
+  },
+  "ebit": {
+    "label": "EBIT",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      55370000000.0,
+      51670000000.0,
+      360230000000.0
+    ]
+  },
+  "net_income": {
+    "label": "Net Income",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      30300000000.0,
+      31950000000.0,
+      320450000000.0
+    ]
+  },
+  "da": {
+    "label": "Depreciation And Amortization",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      19450000000.0,
+      232560000000.0,
+      272700000000.0
+    ]
+  },
+  "capex": {
+    "label": "Capital Expenditure",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      -22480000000.0,
+      -380420000000.0,
+      -314140000000.0
+    ]
+  },
+  "chg_wc": {
+    "label": "Change In Working Capital",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      66570000000.0,
+      81560000000.0,
+      73250000000.0
+    ]
+  },
+  "ocf": {
+    "label": "Operating Cash Flow",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      149810000000.0,
+      631020000000.0,
+      679150000000.0
+    ]
+  },
+  "fcf": {
+    "label": "Free Cash Flow",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      127330000000.0,
+      250600000000.0,
+      365010000000.0
+    ]
+  },
+  "total_debt": 56150000000.0,
+  "cash": 130600000000.0,
+  "equity_book": 127340000000.0,
+  "invested_capital": 175510000000.0,
+  "interest_expense": 8740000000.0,
+  "beta": null,
+  "trailing_pe": 36.739895,
+  "forward_pe": 17.850588,
+  "analyst_growth": 0.193,
+  "target_mean": 528.65,
+  "n_analysts": 20,
+  "fetched_at": "2026-10-03T12:38:27+00:00",
+  "source": "yahoo",
+  "provenance": {
+    "beta": "not reported; defaulted to 1.0 in the WACC build"
+  },
+  "warnings": [],
+  "_pretax": {
+    "label": "Pretax Income",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      46630000000.0,
+      40880000000.0,
+      284290000000.0
+    ]
+  },
+  "_tax": {
+    "label": "Tax Provision",
+    "years": [
+      2026,
+      2025,
+      2024
+    ],
+    "values": [
+      16330000000.0,
+      8930000000.0,
+      -40240000000.0
+    ]
+  }
+}

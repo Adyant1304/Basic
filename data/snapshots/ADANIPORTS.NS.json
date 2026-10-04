@@ -1,0 +1,175 @@
+{
+  "ticker": "ADANIPORTS.NS",
+  "name": "Adani Ports and Special Economic Zone Limited",
+  "sector": "Industrials",
+  "industry": "Marine Shipping",
+  "currency": "INR",
+  "price": 1737.8,
+  "shares_out": 2303959098.0,
+  "market_cap": 4003820208128.0,
+  "revenue": {
+    "label": "Total Revenue",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      387357700000.0,
+      304753300000.0,
+      267105600000.0,
+      208519100000.0
+    ]
+  },
+  "ebit": {
+    "label": "EBIT",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      185999300000.0,
+      157163000000.0,
+      128052400000.0,
+      80439500000.0
+    ]
+  },
+  "net_income": {
+    "label": "Net Income",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      128062100000.0,
+      110923100000.0,
+      81106400000.0,
+      53088500000.0
+    ]
+  },
+  "da": {
+    "label": "Depreciation And Amortization",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      55173800000.0,
+      43789300000.0,
+      38884600000.0,
+      34247100000.0
+    ]
+  },
+  "capex": {
+    "label": "Capital Expenditure",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      -153203100000.0,
+      -80489200000.0,
+      -74163000000.0,
+      -91410400000.0
+    ]
+  },
+  "chg_wc": {
+    "label": "Change In Working Capital",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      -30018900000.0,
+      -3704600000.0,
+      -95500000.0,
+      -8741300000.0
+    ]
+  },
+  "ocf": {
+    "label": "Operating Cash Flow",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      203562500000.0,
+      172262800000.0,
+      150175800000.0,
+      118995000000.0
+    ]
+  },
+  "fcf": {
+    "label": "Free Cash Flow",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      50359400000.0,
+      91773600000.0,
+      76012800000.0,
+      27584600000.0
+    ]
+  },
+  "total_debt": 632361600000.0,
+  "cash": 73097600000.0,
+  "equity_book": 961253000000.0,
+  "invested_capital": 1510654400000.0,
+  "interest_expense": 37513700000.0,
+  "beta": 0.493,
+  "trailing_pe": 29.675547,
+  "forward_pe": 22.229424,
+  "analyst_growth": 0.186,
+  "target_mean": 2047.0834,
+  "n_analysts": 24,
+  "fetched_at": "2026-10-03T09:11:29+00:00",
+  "source": "yahoo",
+  "provenance": {},
+  "warnings": [],
+  "_pretax": {
+    "label": "Pretax Income",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      148485600000.0,
+      130296200000.0,
+      100937300000.0,
+      54868900000.0
+    ]
+  },
+  "_tax": {
+    "label": "Tax Provision",
+    "years": [
+      2026,
+      2025,
+      2024,
+      2023
+    ],
+    "values": [
+      20665300000.0,
+      19683600000.0,
+      15345800000.0,
+      960400000.0
+    ]
+  }
+}
