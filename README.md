@@ -1,4 +1,4 @@
-# Mark to Market
+# Basic
 
 **What the price has to believe.**
 
@@ -10,53 +10,6 @@ drag the assumptions and watch the valuation move.
 The claim the tool makes is not "this stock is worth ₹1,025." It is "the
 market is paying for 12.0% growth and you only believe 9.1% — that gap is
 your thesis."
-
----
-
-## Running it
-
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-It opens at `http://localhost:8501` on the home screen, which explains the
-idea and takes a ticker. From there, open a company or load the worked
-example, which runs on invented figures so the whole tool is visible without
-fetching anything. The sidebar has a way back.
-
-Indian listings need the exchange suffix: `INFY.NS` for the NSE, `INFY.BO`
-for the BSE. US tickers work bare: `AAPL`, `MSFT`.
-
-### Before a presentation, save snapshots
-
-```bash
-python -m mtm.snapshot INFY.NS HCLTECH.NS WIPRO.NS TCS.NS
-```
-
-The app falls back to these automatically whenever Yahoo is unreachable, and
-says on screen that it is doing so. Campus wifi has ended better demos than
-yours.
-
-### Tests
-
-```bash
-python -m pytest tests/ -q      # 29 tests
-```
-
-The one that matters is `test_matches_hand_calculation`: it checks the DCF
-against a figure worked out independently from the formula, line by line. If
-that passes, the engine is doing arithmetic rather than something that
-merely resembles it.
-
-### Deploying
-
-Push to GitHub, then connect the repo at
-[share.streamlit.io](https://share.streamlit.io). It is free, it is one
-click, and `requirements.txt` is already here. You get a public URL you can
-put on a slide.
-
----
 
 ## What it does
 
