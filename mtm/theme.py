@@ -118,10 +118,22 @@ CSS = f"""
   --down: {DOWN};
 }}
 
-html, body, [class*="st-"], .stApp {{
+html, body, .stApp, .stMarkdown, .stMarkdown p, label, button, input, textarea {{
   font-family: {FONT_SANS};
+}}
+.stApp {{
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1, "cv05" 1;
+}}
+
+/* Icons keep Streamlit's own icon font. */
+[data-testid="stIconMaterial"],
+[data-testid="stExpanderIcon"],
+span[class*="material" i] {{
+  font-family: "Material Symbols Rounded" !important;
+  font-feature-settings: "liga" !important;
+  font-variant-numeric: normal !important;
+  letter-spacing: normal !important;
 }}
 .stApp {{ background: var(--paper); color: var(--ink); }}
 
