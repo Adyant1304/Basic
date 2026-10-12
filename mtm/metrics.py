@@ -237,13 +237,19 @@ def valuation_metrics(c: Company, a: Assumptions, p: Projection,
                           read, st))
 
     # ---- WACC sanity ----------------------------------------------------
-    if 0.08 <= w.wacc <= 0.16:
+    # The normal band depends on the market: an Indian 10-year yield sits near
+    # 6.5%, a US one near 4-5%, and the whole discount-rate range moves with it.
+    if c.market.key == "IN":
+        lo, hi, where, band = 0.08, 0.16, "Indian large caps", "roughly 10-12% for Indian large caps"
+    else:
+        lo, hi, where, band = 0.06, 0.12, "developed-market large caps", "roughly 7-10% for developed-market large caps"
+    if lo <= w.wacc <= hi:
         st, read = "good", (
-            f"WACC of {w.wacc:.2%} sits in the normal band for Indian large caps "
+            f"WACC of {w.wacc:.2%} sits in the normal band for {where} "
             f"(beta {w.beta:.2f} on a {w.risk_free:.2%} risk-free rate and a "
             f"{w.equity_risk_premium:.1%} equity risk premium)."
         )
-    elif w.wacc < 0.08:
+    elif w.wacc < lo:
         st, read = "watch", (
             f"WACC of {w.wacc:.2%} is low for this market, which flatters the "
             "valuation. Check the beta and risk-free inputs."
@@ -253,9 +259,7 @@ def valuation_metrics(c: Company, a: Assumptions, p: Projection,
             f"WACC of {w.wacc:.2%} is demanding and suppresses the value. "
             "Reasonable for a high-beta or small-cap name, aggressive otherwise."
         )
-    out.append(Metric("WACC", w.wacc, "pct", "lower",
-                      "roughly 10-12% for Indian large caps",
-                      read, st))
+    out.append(Metric("WACC", w.wacc, "pct", "lower", band, read, st))
 
     return out
 
@@ -350,6 +354,25 @@ def sanity_flags(c: Company, a: Assumptions, p: Projection,
             "warn", "Terminal value dominates",
             f"{p.terminal_share:.0%} of the valuation comes from the period "
             "beyond the explicit forecast."
+        ))
+
+    # Capital structure can swallow the whole enterprise.
+    if p.equity_value <= 0:
+        flags.append(Flag(
+            "error", "Debt exceeds the value of the business",
+            f"Enterprise value of {p.enterprise_value:,.0f} is smaller than "
+            f"net debt of {p.net_debt:,.0f}, so the equity is worth nothing "
+            "on these assumptions and the per-share value is negative. That is "
+            "a statement about leverage, not a price target."
+        ))
+
+    # A loss-maker has no margin to fade back to.
+    if a.margin_start < 0:
+        flags.append(Flag(
+            "warn", "The company is loss-making today",
+            f"Operating margin is {a.margin_start:.1%} now, so the model is "
+            "assuming a turnaround to the target margin. A DCF is a weak tool "
+            "here: the answer is mostly the turnaround assumption."
         ))
 
     # Data sufficiency.

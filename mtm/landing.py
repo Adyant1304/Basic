@@ -108,10 +108,10 @@ def concept_svg() -> str:
 
 _STEPS = [
     ("Fetch",
-     "One call to Yahoo Finance brings back five years of income statement, "
-     "balance sheet and cash flow, plus the current price, share count and "
-     "beta. Every line item is looked up through a list of aliases, because "
-     "Yahoo renames them between companies."),
+     "One pass over Yahoo Finance brings back the income statement, balance "
+     "sheet and cash flow, the price and share count, and five years of "
+     "weekly prices. Beta is then measured from those prices against the "
+     "local index, because Yahoo's own beta is unusable for Indian listings."),
     ("Anchor",
      "Each assumption is derived from the company's own record: growth from "
      "its revenue CAGR, margin from its historical median, the tax rate from "
@@ -139,6 +139,13 @@ _COMPUTES = [
     ("Assumption checks",
      "Flags a growth rate above anything in the record, a margin above the "
      "historical peak, and terminal growth above the risk-free rate."),
+    ("Relative valuation",
+     "Pulls the company's peers from Yahoo's screener, compares P/E, P/B and "
+     "EV multiples, and shows what the peer median implies for one share "
+     "next to your DCF."),
+    ("Segments",
+     "Splits revenue by business and geography from the company's own "
+     "filings, with the source and period printed under every chart."),
 ]
 
 _LIMITS = [
@@ -173,11 +180,15 @@ def render() -> None:
     # ---- the one thing on this page that asks for an action --------------
     st.markdown('<div class="lp-ask">Open a company</div>',
                 unsafe_allow_html=True)
-    f1, f2, _ = st.columns([24, 8, 28])
-    typed = f1.text_input(
-        "Ticker", key="landing_ticker", placeholder="INFY.NS",
-        label_visibility="collapsed")
-    opened = f2.button("Open", use_container_width=True, type="primary")
+    # A form, so pressing Enter in the box opens the company. A bare text
+    # input only reruns the page on Enter and the Open button never fired.
+    with st.form("landing_open", border=False):
+        f1, f2, _ = st.columns([24, 8, 28])
+        typed = f1.text_input(
+            "Ticker", key="landing_ticker", placeholder="INFY.NS",
+            label_visibility="collapsed")
+        opened = f2.form_submit_button("Open", width="stretch",
+                                       type="primary")
     st.markdown(
         '<p class="lp-hint">Any Yahoo Finance symbol. Indian listings need '
         'the exchange suffix: INFY.NS on the NSE, INFY.BO on the BSE. '
@@ -192,7 +203,7 @@ def render() -> None:
                 unsafe_allow_html=True)
     cols = st.columns(6)
     for i, (label, sym) in enumerate(PRESETS.items()):
-        if cols[i].button(label, use_container_width=True, key=f"lp_{sym}"):
+        if cols[i].button(label, width="stretch", key=f"lp_{sym}"):
             st.session_state.ticker = sym
             st.rerun()
 
@@ -203,7 +214,7 @@ def render() -> None:
         'worked example runs on invented figures, so the whole tool is '
         'visible without fetching anything.</p>',
         unsafe_allow_html=True)
-    if s2.button("See the worked example", use_container_width=True,
+    if s2.button("See the worked example", width="stretch",
                  key="lp_sample"):
         st.session_state.show_sample = True
         st.rerun()

@@ -16,22 +16,33 @@ from __future__ import annotations
 # --------------------------------------------------------------------------
 # Palette
 # --------------------------------------------------------------------------
-PAPER = "#0F1415"
-PAPER_2 = "#161D1F"
-PAPER_3 = "#1E2729"
-INK = "#E8ECE9"
-INK_SOFT = "#A3ADB0"
-INK_FAINT = "#6F7B80"
-RULE = "#2C3739"
+PAPER = "#F1F2EE"        # cool grey-green stock, not warm cream
+PAPER_2 = "#E5E8E1"      # recessed panels
+PAPER_3 = "#DADED5"
+INK = "#141A1C"          # deep blue-black
+INK_SOFT = "#5A6469"
+INK_FAINT = "#8A9299"
+RULE = "#C7CEC5"
 
-MARKET = "#9AA5A9"
-YOURS = "#3FB8A8"
-CONSENSUS = "#D9A441"
-DOWN = "#E0674A"
-GOOD = "#4CC38A"
-WATCH = "#D9A441"
-POOR = "#E0674A"
+MARKET = "#5A6469"       # slate
+YOURS = "#0E4F4B"        # deep teal
+CONSENSUS = "#A8761C"    # oxidised ochre
+DOWN = "#9E3B22"         # rust
+GOOD = "#1F6B4F"
+WATCH = "#9A6B12"
+POOR = "#9E3B22"
+
 STATUS = {"good": GOOD, "watch": WATCH, "poor": POOR, "neutral": INK_SOFT}
+
+# Segment identity colours, in a fixed order. A segment keeps its colour in
+# every chart and every period. The set was run through the palette validator
+# (lightness band, chroma floor and normal-vision separation all pass; the
+# colour-blind and contrast checks warn, which is why every chart that uses
+# them also carries direct labels and a table). Rust is left out on purpose:
+# in this app rust means "downside", and a business line is not a downside.
+SEGMENT_COLOURS = ["#0A9A8E", "#C9861A", "#3F78BE", "#BB5F8F", "#6AA14E",
+                   "#7E6BB0"]
+OTHER_COLOUR = "#9AA3A8"
 
 FONT_SANS = "'Archivo', 'Helvetica Neue', Arial, sans-serif"
 FONT_SERIF = "'Source Serif 4', Georgia, serif"
@@ -69,24 +80,27 @@ def money(value: float | None, currency: str = "INR",
     """Large sums in crore for rupees, billions otherwise."""
     if value is None:
         return "n/a"
+    # The minus sign goes before the currency symbol: "-$3", never "$-3".
+    sign, v = ("-", -value) if value < 0 else ("", value)
     sym = symbol(currency)
     if not compact:
-        return f"{sym}{indian_group(value, 0)}"
+        return f"{sign}{sym}{indian_group(v, 0)}"
     if currency == "INR":
-        cr = value / 1e7
+        cr = v / 1e7
         if abs(cr) >= 1e5:
-            return f"{sym}{indian_group(cr / 1e5, 2)} lakh cr"
-        return f"{sym}{indian_group(cr, 0)} cr"
+            return f"{sign}{sym}{indian_group(cr / 1e5, 2)} lakh cr"
+        return f"{sign}{sym}{indian_group(cr, 0)} cr"
     for div, suffix in ((1e9, "bn"), (1e6, "m"), (1e3, "k")):
-        if abs(value) >= div:
-            return f"{sym}{value / div:,.1f}{suffix}"
-    return f"{sym}{value:,.0f}"
+        if abs(v) >= div:
+            return f"{sign}{sym}{v / div:,.1f}{suffix}"
+    return f"{sign}{sym}{v:,.0f}"
 
 
 def per_share(value: float | None, currency: str = "INR") -> str:
     if value is None:
         return "n/a"
-    return f"{symbol(currency)}{indian_group(value, 0)}"
+    sign, v = ("-", -value) if value < 0 else ("", value)
+    return f"{sign}{symbol(currency)}{indian_group(v, 0)}"
 
 
 def pct(value: float | None, decimals: int = 1, signed: bool = False) -> str:
@@ -94,6 +108,43 @@ def pct(value: float | None, decimals: int = 1, signed: bool = False) -> str:
         return "n/a"
     s = f"{value * 100:+.{decimals}f}%" if signed else f"{value * 100:.{decimals}f}%"
     return s
+
+
+def points(shift: float) -> str:
+    """A change in percentage points. A move that rounds to zero prints as
+    '0.0 pts', never '-0.0 pts'."""
+    r = round(shift, 1)
+    return "0.0 pts" if r == 0 else f"{r:+.1f} pts"
+
+
+def multiple(value: float | None, decimals: int = 1) -> str:
+    """A valuation multiple, or 'n/m' (not meaningful) when there is none."""
+    if value is None or value != value:
+        return "n/m"
+    return f"{value:,.{decimals}f}x"
+
+
+def unit_for(currency: str) -> tuple[float, str]:
+    """(divisor, label) for the large-number tables: crore for rupees."""
+    return (1e7, "crore") if currency == "INR" else (1e9, "bn")
+
+
+def stmt_unit(currency: str) -> tuple[float, str]:
+    """Statement tables read better in crore (INR) or millions (others)."""
+    if currency == "INR":
+        return 1e7, f"{symbol(currency)} crore"
+    return 1e6, f"{symbol(currency).strip()} million"
+
+
+def amount(value: float | None, currency: str, decimals: int = 0) -> str:
+    """A statement figure in crore or millions, with grouping."""
+    if value is None or value != value:
+        return "n/a"
+    div, _ = stmt_unit(currency)
+    v = value / div
+    if currency == "INR":
+        return indian_group(v, decimals)
+    return f"{v:,.{decimals}f}"
 
 
 # --------------------------------------------------------------------------
@@ -124,6 +175,17 @@ html, body, [class*="st-"], .stApp {{
   font-feature-settings: "tnum" 1, "cv05" 1;
 }}
 .stApp {{ background: var(--paper); color: var(--ink); }}
+
+/* The rule above reaches every element whose class starts "st-", which
+   includes Streamlit's own icon glyphs. With Archivo applied to them the
+   ligatures never form and the page prints the icon's *name* instead
+   ("keyboard_arrow_right" on every expander, "keyboard_double_arrow_left"
+   on the sidebar toggle). Hand those elements their icon font back. */
+[data-testid="stIconMaterial"] {{
+  font-family: "Material Symbols Rounded", "Material Symbols Outlined",
+               "Material Icons" !important;
+  font-variant-numeric: normal; font-feature-settings: "liga" 1;
+}}
 
 /* Strip Streamlit's own chrome so the page reads as one designed surface. */
 [data-testid="stHeader"] {{ background: transparent; height: 0; }}
@@ -303,6 +365,100 @@ button[kind="secondary"], button[kind="primary"] {{
 
 [data-testid="stSidebar"] {{ min-width: 332px; }}
 
+/* ================= snapshot, tables and KPI tiles =================
+   A tile is a label, a figure and a caption on a hairline. The figure uses
+   proportional digits (it stands alone); table cells use tabular digits
+   (they line up in columns). */
+.kpis {{
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(10.4rem, 1fr));
+  column-gap: 1.4rem; border-top: 1px solid var(--rule); margin-top: .5rem;
+}}
+.kpi {{ padding: .78rem 0 .72rem 0; border-bottom: 1px solid var(--rule); }}
+.kpi .kl {{ font-size: .74rem; color: var(--ink-soft); }}
+.kpi .kv {{
+  font-size: 1.42rem; font-weight: 600; letter-spacing: -.022em;
+  line-height: 1.12; color: var(--ink); margin-top: .12rem;
+  font-variant-numeric: proportional-nums;
+  font-feature-settings: "tnum" 0;
+}}
+.kpi .kv.up {{ color: var(--yours); }}
+.kpi .kv.dn {{ color: var(--down); }}
+.kpi .ks {{ font-size: .72rem; color: var(--ink-faint); margin-top: .18rem;
+  line-height: 1.35; }}
+.kpi .rng {{
+  position: relative; height: 3px; background: var(--paper-3);
+  margin-top: .5rem; border-radius: 2px;
+}}
+.kpi .rng i {{
+  position: absolute; top: -3px; width: 2px; height: 9px;
+  background: var(--yours);
+}}
+.kgroup {{
+  font-size: .78rem; font-weight: 600; color: var(--ink);
+  margin: 1.5rem 0 0 0;
+}}
+
+.tbl-wrap {{ overflow-x: auto; margin-top: .6rem; }}
+.tbl {{ width: 100%; border-collapse: collapse; font-size: .82rem;
+  border: none; }}
+/* Streamlit styles every table cell with a full box border; the page's
+   language is horizontal hairlines only, so strip the sides and the top. */
+.tbl th, .tbl td {{
+  border-left: 0 !important; border-right: 0 !important;
+  border-top: 0 !important;
+}}
+.tbl th {{
+  text-align: right; font-weight: 500; color: var(--ink-soft);
+  font-size: .73rem; padding: .5rem .5rem; white-space: nowrap;
+  border-bottom: 1px solid var(--ink) !important;
+  background: transparent !important;
+}}
+.tbl td {{
+  text-align: right; padding: .42rem .5rem; white-space: nowrap;
+  border-bottom: 1px solid var(--rule) !important; color: var(--ink);
+  font-variant-numeric: tabular-nums; background: transparent;
+}}
+.tbl th:first-child, .tbl td:first-child {{
+  text-align: left; min-width: 8.5rem; max-width: 15rem;
+  overflow: hidden; text-overflow: ellipsis;
+}}
+.tbl th.l, .tbl td.l {{
+  text-align: left; white-space: normal; max-width: none;
+}}
+.tbl tr.me td {{ background: rgba(14,79,75,.08); font-weight: 600; }}
+.tbl tr.agg td {{
+  font-weight: 600; border-top: 1px solid var(--ink-soft) !important;
+  background: var(--paper-2);
+}}
+.tbl tr.sub td {{ color: var(--ink-soft); font-size: .8rem; }}
+.tbl td.dim {{ color: var(--ink-faint); }}
+.tbl td.pos {{ color: var(--yours); }}
+.tbl td.neg {{ color: var(--down); }}
+.tbl-cap {{
+  font-size: .74rem; color: var(--ink-faint); margin: .35rem 0 0 0;
+}}
+.src {{
+  font-size: .76rem; color: var(--ink-faint); margin: .5rem 0 0 0;
+  line-height: 1.5;
+}}
+.src a {{ color: var(--ink-soft); }}
+.about {{
+  font-family: {FONT_SERIF}; font-size: .97rem; line-height: 1.6;
+  color: var(--ink); max-width: 76ch; margin: .6rem 0 .2rem 0;
+}}
+.facts {{ font-size: .8rem; color: var(--ink-soft); margin: .3rem 0 0 0; }}
+.facts a {{ color: var(--ink-soft); }}
+.banner {{
+  border: 1px solid var(--rule); border-left: 3px solid var(--down);
+  background: var(--paper-2); padding: .85rem 1rem; margin: 1rem 0 .4rem 0;
+  border-radius: 2px;
+}}
+.banner .bt {{ font-size: .92rem; font-weight: 600; color: var(--down); }}
+.banner .bd {{
+  font-family: {FONT_SERIF}; font-size: .97rem; line-height: 1.55;
+  color: var(--ink); margin-top: .25rem; max-width: 74ch;
+}}
+
 
 /* ================= home screen =================
    Wider measure and more air than the app: this page is read, the app is
@@ -417,7 +573,7 @@ button[kind="secondary"], button[kind="primary"] {{
 def plotly_template() -> dict:
     axis = {
         "showgrid": True,
-        "gridcolor": "rgba(232,236,233,0.08)",
+        "gridcolor": "rgba(20,26,28,0.08)",
         "gridwidth": 1,
         "zeroline": False,
         "showline": True,

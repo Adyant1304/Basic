@@ -1,0 +1,150 @@
+{
+  "_readme": "Segment revenue disclosed by each company in its own filings. Yahoo Finance does not publish segment data, so nothing here comes from Yahoo. Every entry carries its source and period. 'kind' is 'share' when the filing gives percentages of revenue and 'amount' when it gives money in 'unit'. Periods are newest first. 'total' is the figure the filing states, and tests/test_segments.py checks that the segments add up to it. To add a company, copy an entry, keep the same shape, and run the tests.",
+
+  "INFY.NS": {
+    "company": "Infosys",
+    "aliases": ["INFY", "INFY.BO"],
+    "views": [
+      {
+        "title": "By business segment",
+        "kind": "share",
+        "unit": "% of revenue",
+        "source": "Infosys Q4 FY26 fact sheet, Form 6-K Exhibit 99.4, filed April 2026",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/0001067491/000106749126000018/exv99w04.htm",
+        "note": "Infosys publishes the mix as percentages of quarterly revenue, so this view shows shares, not rupee amounts.",
+        "periods": [
+          {"label": "Q4 FY26", "detail": "quarter ended 31 Mar 2026", "total": 100.0,
+           "values": {"Financial services": 28.0, "Manufacturing": 15.9,
+                      "Energy, utilities, resources and services": 13.2, "Retail": 12.8,
+                      "Communication": 12.4, "Hi-tech": 7.7, "Life sciences": 7.3, "Others": 2.7}},
+          {"label": "Q4 FY25", "detail": "quarter ended 31 Mar 2025", "total": 100.0,
+           "values": {"Financial services": 28.4, "Manufacturing": 15.9,
+                      "Energy, utilities, resources and services": 13.0, "Retail": 13.3,
+                      "Communication": 11.7, "Hi-tech": 8.3, "Life sciences": 6.8, "Others": 2.6}}
+        ]
+      },
+      {
+        "title": "By client geography",
+        "kind": "share",
+        "unit": "% of revenue",
+        "source": "Infosys Q4 FY26 fact sheet, Form 6-K Exhibit 99.4, filed April 2026",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/0001067491/000106749126000018/exv99w04.htm",
+        "note": "",
+        "periods": [
+          {"label": "Q4 FY26", "detail": "quarter ended 31 Mar 2026", "total": 100.0,
+           "values": {"North America": 55.7, "Europe": 32.6, "Rest of the world": 9.1, "India": 2.6}},
+          {"label": "Q4 FY25", "detail": "quarter ended 31 Mar 2025", "total": 100.0,
+           "values": {"North America": 57.1, "Europe": 31.2, "Rest of the world": 8.8, "India": 2.9}}
+        ]
+      }
+    ]
+  },
+
+  "WIPRO.NS": {
+    "company": "Wipro",
+    "aliases": ["WIT", "WIPRO.BO"],
+    "views": [
+      {
+        "title": "By reportable segment",
+        "kind": "amount",
+        "unit": "INR crore",
+        "source": "Wipro Q4 FY26 results, audited segment note (IFRS), page 10",
+        "source_url": "https://www.wipro.com/content/dam/nexus/en/investor/quarterly-results/2025-2026/q4fy26/press-release-q4fy26.pdf",
+        "note": "Wipro's IT Services segment is split into four market units. Americas 1 and Americas 2 are organised by industry sector, Europe and APMEA by country. The filing reports rupees million; these figures are that divided by ten.",
+        "periods": [
+          {"label": "FY26", "detail": "year ended 31 Mar 2026", "total": 92809.3,
+           "values": {"Americas 1": 30557.1, "Americas 2": 26907.7, "Europe": 24416.5,
+                      "APMEA": 10234.0, "IT Products": 694.0}},
+          {"label": "FY25", "detail": "year ended 31 Mar 2025", "total": 89091.6,
+           "values": {"Americas 1": 28182.4, "Americas 2": 27197.2, "Europe": 24007.7,
+                      "APMEA": 9435.1, "IT Products": 269.2}}
+        ]
+      }
+    ]
+  },
+
+  "SAMPLE.NS": {
+    "company": "Sample Services Ltd",
+    "illustrative": true,
+    "aliases": [],
+    "views": [
+      {
+        "title": "By business segment",
+        "kind": "amount",
+        "unit": "INR crore",
+        "source": "Invented figures for the worked example. Not a real company.",
+        "source_url": "",
+        "note": "",
+        "periods": [
+          {"label": "FY26", "detail": "illustrative", "total": 41200,
+           "values": {"Banking and insurance": 12400, "Retail and consumer": 8900,
+                      "Manufacturing": 7300, "Technology": 6100,
+                      "Healthcare": 4400, "Other": 2100}},
+          {"label": "FY25", "detail": "illustrative", "total": 37900,
+           "values": {"Banking and insurance": 11800, "Retail and consumer": 8000,
+                      "Manufacturing": 6900, "Technology": 5200,
+                      "Healthcare": 3800, "Other": 2200}}
+        ]
+      }
+    ]
+  },
+
+  "AAPL": {
+    "company": "Apple",
+    "aliases": [],
+    "views": [
+      {
+        "title": "By product category",
+        "kind": "amount",
+        "unit": "USD million",
+        "source": "Apple fiscal 2025 Q4 condensed consolidated statements of operations, footnote 1",
+        "source_url": "https://www.apple.com/newsroom/pdfs/fy2025-q4/FY25_Q4_Consolidated_Financial_Statements.pdf",
+        "note": "",
+        "periods": [
+          {"label": "FY25", "detail": "twelve months ended 27 Sep 2025", "total": 416161,
+           "values": {"iPhone": 209586, "Mac": 33708, "iPad": 28023,
+                      "Wearables, home and accessories": 35686, "Services": 109158}},
+          {"label": "FY24", "detail": "twelve months ended 28 Sep 2024", "total": 391035,
+           "values": {"iPhone": 201183, "Mac": 29984, "iPad": 26694,
+                      "Wearables, home and accessories": 37005, "Services": 96169}}
+        ]
+      },
+      {
+        "title": "By region",
+        "kind": "amount",
+        "unit": "USD million",
+        "source": "Apple fiscal 2025 Q4 condensed consolidated statements of operations, net sales by reportable segment",
+        "source_url": "https://www.apple.com/newsroom/pdfs/fy2025-q4/FY25_Q4_Consolidated_Financial_Statements.pdf",
+        "note": "",
+        "periods": [
+          {"label": "FY25", "detail": "twelve months ended 27 Sep 2025", "total": 416161,
+           "values": {"Americas": 178353, "Europe": 111032, "Greater China": 64377,
+                      "Japan": 28703, "Rest of Asia Pacific": 33696}},
+          {"label": "FY24", "detail": "twelve months ended 28 Sep 2024", "total": 391035,
+           "values": {"Americas": 167045, "Europe": 101328, "Greater China": 66952,
+                      "Japan": 25052, "Rest of Asia Pacific": 30658}}
+        ]
+      }
+    ]
+  },
+
+  "TITAN.NS": {
+    "company": "Titan",
+    "aliases": [],
+    "views": [
+      {
+        "title": "By business, one quarter",
+        "kind": "amount",
+        "unit": "INR crore",
+        "source": "Titan Q4 FY26 results release, 8 May 2026 (titancompany.in)",
+        "source_url": "https://www.titancompany.in/news/titan-FY26-results",
+        "note": "Only the fourth quarter was reachable, so this is one quarter, not the year. Jewellery excludes bullion and digi-gold sales. Shares are of the five businesses listed (INR 20,221 crore); the company states consolidated total income of about INR 20,300 crore, the difference being other and unallocated items.",
+        "periods": [
+          {"label": "Q4 FY26", "detail": "quarter ended 31 Mar 2026", "total": 20221,
+           "values": {"Jewellery": 18195, "Watches": 1222, "EyeCare": 227,
+                      "Emerging businesses": 123, "TEAL (engineering and automation)": 454}}
+        ]
+      }
+    ]
+  }
+}

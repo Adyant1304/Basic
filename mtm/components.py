@@ -218,6 +218,15 @@ def gap_bar(price: float, your_value: float, currency: str,
 
 def verdict(value: float, price: float, currency: str,
             prob_above: float | None = None) -> str:
+    if value <= 0:
+        # "291% below the market" is meaningless for a negative value. Say
+        # what a negative equity value actually means.
+        return (
+            '<p class="verdict">On your assumptions the business is worth '
+            'less than its debt, so the equity is worth nothing: the model '
+            f'prints <span class="big dn">{T.per_share(value, currency)}</span> '
+            'a share. That is a statement about leverage, not a price '
+            'target.</p>')
     up = value >= price
     cls = "up" if up else "dn"
     word = "above" if up else "below"
@@ -295,6 +304,12 @@ _PROV_LABELS = {
     "tax_rate": "Tax rate",
     "beta": "Beta",
     "fcf": "Free cash flow",
+    "wacc": "WACC",
+    "ebit": "Operating margin line",
+    "currency": "Currency translation",
+    "financials": "Financial statements",
+    "peers": "Peer set",
+    "segments": "Segment revenue",
 }
 
 
@@ -307,6 +322,75 @@ def provenance_block(prov: dict[str, str]) -> str:
             f'<div class="v">{html.escape(v)}</div></div>'
         )
     return f'<div class="prov">{"".join(rows)}</div>'
+
+
+# --------------------------------------------------------------------------
+# KPI tiles, tables, banners
+# --------------------------------------------------------------------------
+
+def kpi_grid(items: list[dict]) -> str:
+    """A row of figures. Each item: label, value, and optionally sub, tone
+    ("up" | "dn") and marker (0-1, a position on a thin range bar)."""
+    tiles = []
+    for it in items:
+        tone = f" {it['tone']}" if it.get("tone") in ("up", "dn") else ""
+        rng = ""
+        m = it.get("marker")
+        if m is not None and m == m:
+            rng = (f'<div class="rng"><i style="left:{min(max(m, 0), 1) * 100:.1f}%">'
+                   '</i></div>')
+        sub = f'<div class="ks">{html.escape(it["sub"])}</div>' if it.get("sub") else ""
+        tiles.append(
+            '<div class="kpi">'
+            f'<div class="kl">{html.escape(it["label"])}</div>'
+            f'<div class="kv{tone}">{html.escape(it["value"])}</div>'
+            f'{rng}{sub}</div>'
+        )
+    return f'<div class="kpis">{"".join(tiles)}</div>'
+
+
+def html_table(headers: list[str], rows: list[list[str]],
+               row_classes: list[str] | None = None,
+               cell_classes: list[list[str]] | None = None,
+               caption: str = "", left_cols: tuple[int, ...] = ()) -> str:
+    """A plain table in the page's own style, numbers right-aligned.
+
+    `row_classes` marks rows ("me" for the company being analysed, "agg" for a
+    summary row, "sub" for a quieter row). `cell_classes` tints single cells.
+    `left_cols` lists columns of words (labels, notes) that read left-aligned;
+    the first column always does.
+    """
+    left = set(left_cols)
+    head = "".join(
+        f'<th class="{"l" if j in left else ""}">{html.escape(h)}</th>'
+        for j, h in enumerate(headers))
+    body = []
+    for i, row in enumerate(rows):
+        rc = (row_classes[i] if row_classes and i < len(row_classes) else "")
+        cells = []
+        for j, v in enumerate(row):
+            cc = ""
+            if cell_classes and i < len(cell_classes) and j < len(cell_classes[i]):
+                cc = cell_classes[i][j]
+            if j in left:
+                cc = (cc + " l").strip()
+            cells.append(f'<td class="{cc}">{html.escape(str(v))}</td>')
+        body.append(f'<tr class="{rc}">{"".join(cells)}</tr>')
+    cap = f'<p class="tbl-cap">{html.escape(caption)}</p>' if caption else ""
+    return (f'<div class="tbl-wrap"><table class="tbl"><thead><tr>{head}'
+            f'</tr></thead><tbody>{"".join(body)}</tbody></table></div>{cap}')
+
+
+def source_line(text: str, url: str = "") -> str:
+    link = (f' <a href="{html.escape(url, quote=True)}" target="_blank" '
+            f'rel="noopener noreferrer">Open the source</a>' if url else "")
+    return f'<p class="src">{html.escape(text)}{link}</p>'
+
+
+def banner(title: str, body: str) -> str:
+    return ('<div class="banner">'
+            f'<div class="bt">{html.escape(title)}</div>'
+            f'<div class="bd">{html.escape(body)}</div></div>')
 
 
 def section(title: str, note: str | None = None) -> str:

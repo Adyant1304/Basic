@@ -31,23 +31,37 @@ for the BSE. US tickers work bare: `AAPL`, `MSFT`.
 ### Before a presentation, save snapshots
 
 ```bash
-python -m mtm.snapshot INFY.NS HCLTECH.NS WIPRO.NS TCS.NS
+python -m mtm.snapshot INFY.NS HCLTECH.NS WIPRO.NS TCS.NS ASIANPAINT.NS TITAN.NS
 ```
 
-The app falls back to these automatically whenever Yahoo is unreachable, and
-says on screen that it is doing so. Campus wifi has ended better demos than
-yours.
+Each snapshot saves the company *and* its peer set, so the Relative value tab
+works offline too. The app falls back to these automatically whenever Yahoo is
+unreachable, and says on screen that it is doing so. Campus wifi has ended
+better demos than yours. Every company you open online is also saved, so
+anything you have looked at once is available offline afterwards.
+
+A link such as `http://localhost:8501/?ticker=TCS.NS` opens that company
+directly.
 
 ### Tests
 
 ```bash
-python -m pytest tests/ -q      # 29 tests
+python -m pytest tests/ -q      # 186 tests, about 25 seconds, no network
 ```
 
-The one that matters is `test_matches_hand_calculation`: it checks the DCF
-against a figure worked out independently from the formula, line by line. If
-that passes, the engine is doing arithmetic rather than something that
-merely resembles it.
+Three groups matter most:
+
+- `test_matches_hand_calculation` checks the DCF against a figure worked out
+  independently from the formula, line by line. If that passes, the engine is
+  doing arithmetic rather than something that merely resembles it.
+- `test_beta.py` checks that the regression recovers a beta built into
+  synthetic data, and refuses to report one when the data cannot support it.
+- `test_app.py` drives the real Streamlit script and clicks its real buttons
+  and selectors. Several bugs (a crashing "Market-implied" button, sliders
+  seeded outside their range) are Streamlit rules about widgets, so only
+  running the page can catch them.
+
+No test touches the network or writes into `data/`.
 
 ### Deploying
 
@@ -59,6 +73,37 @@ put on a slide.
 ---
 
 ## What it does
+
+**Overview.** A company snapshot before any modelling: what the business is,
+twenty-odd key figures grouped by the question they answer (what the market
+says, what it is priced at, how well the business earns, how strong the
+balance sheet is), five years of share price, the income statement, balance
+sheet and cash flow, and the reported record of revenue and margins. The
+valuation ratios are rebuilt after currency translation, because Yahoo's own
+versions are wrong whenever a company is quoted in one currency and reports
+in another.
+
+**Beta, measured per company.** Yahoo's `beta` is unusable for Indian
+listings (on the day this was written it said 0.12 for Infosys, 0.18 for TCS
+and -0.06 for ITC). Beta is instead the slope of a regression of the stock's
+five years of weekly returns on its local index (Nifty 50 for NSE, Sensex for
+BSE, S&P 500 for US listings). The sidebar lets you choose the raw regression,
+the Blume-adjusted figure, Yahoo's number, or your own; the Overview draws the
+regression itself with its R-squared and confidence interval.
+
+**Segments.** Revenue by business and by geography as donut, ranked bars, a
+before-and-after dumbbell of how the mix moved, and a table. Yahoo publishes
+no segment data, so this comes from `data/segments.json`, transcribed from
+company filings, each entry carrying its source, its period and the total the
+filing states (a test checks that every entry adds up). For a company that is
+not in the file there is a small table to type its segments into.
+
+**Relative value.** Peers come from Yahoo's screener: same exchange, same
+industry, nearest eight by market value (editable). The table shows P/E,
+forward P/E, P/B, EV/EBITDA and EV/Sales with the peer median, then what each
+median implies for one share, then a football-field chart putting the DCF, the
+analyst range and every peer multiple on one price axis. Banks get P/E and P/B
+only, because enterprise-value multiples mean nothing for a lender.
 
 **Reverse DCF.** Solves by bisection for the growth rate that makes the
 model print today's market price. This is the feature the tool exists for:
@@ -125,9 +170,26 @@ raises a hard flag if you push past it.
 
 WACC is CAPM: `risk-free + beta x equity risk premium` for the cost of
 equity, blended with the after-tax cost of debt at market weights. The
-risk-free rate defaults to 6.55%, roughly the Indian 10-year G-sec, and the
-equity risk premium to 7.0%. Both are sliders, because both move and neither
-belongs hard-coded in a model.
+inputs belong to the market the stock trades in. Indian listings default to a
+6.55% risk-free rate (roughly the 10-year G-sec, which Yahoo does not carry,
+so update it) and a 7.0% premium; US listings take the live 10-year Treasury
+yield from Yahoo and a 4.5% premium. Both are sliders, because both move and
+neither belongs hard-coded in a model.
+
+Operating margin uses Yahoo's *Operating Income* line, not *EBIT*. EBIT is
+pretax income plus interest, so it carries other income and one-off gains
+(TTML's FY26 "EBIT" was 99.6% of revenue); using it would also count
+treasury income twice, once in the margin and again when cash is added back.
+
+When Yahoo reports a company's statements in a different currency from its
+share price (Infosys and HCLTech: rupee price, dollar financials), every
+statement figure is translated at the day's spot rate and the translation is
+disclosed on the page and in the Audit tab.
+
+**When a DCF does not apply.** For banks and lenders, deposits are raw
+material rather than financing, so enterprise value is meaningless. The app
+says so, hides the DCF tabs and keeps Overview, Segments and Relative value;
+a sidebar box runs the DCF anyway if you want to see why not.
 
 ---
 
@@ -153,16 +215,24 @@ question at a time.
 ## Layout
 
 ```
-app.py                  the Streamlit page: layout, state, tabs
-mtm/data.py             Yahoo extraction, aliasing, snapshots
-mtm/engine.py           the DCF, reverse DCF, sensitivity, tornado, Monte Carlo
+app.py                  the Streamlit page: layout, state, sidebar, tabs
+mtm/data.py             Yahoo extraction, aliasing, currency, snapshots
+mtm/beta.py             the beta regression (pure arithmetic)
+mtm/markets.py          which market a ticker is in; its index and default rates
+mtm/engine.py           WACC, the DCF, reverse DCF, sensitivity, tornado, Monte Carlo
 mtm/metrics.py          ratios with readings, and the sanity flags
+mtm/peers.py            peer discovery, peer multiples, implied values
+mtm/segments.py         segment data loading, shares, validation
+mtm/views.py            the Overview, Segments and Relative value tabs
 mtm/charts.py           Plotly figures on one shared template
-mtm/components.py       the gap bar and the HTML pieces
+mtm/components.py       the gap bar, KPI tiles, tables and HTML pieces
 mtm/theme.py            palette, type, number formatting, CSS
+mtm/landing.py          the home screen
 mtm/sample.py           the invented company used when no ticker is entered
-mtm/snapshot.py         save companies for offline use
-tests/test_engine.py    29 tests
+mtm/snapshot.py         save companies and peer sets for offline use
+data/segments.json      segment revenue from company filings, with sources
+data/snapshots/         saved companies (written automatically)
+tests/                  186 tests: engine, beta, data, peers, segments, views, app
 ```
 
 `data.py` never trusts a single Yahoo label: every line item is looked up
@@ -179,6 +249,19 @@ State these before anyone else does; it is what makes the work credible.
 - **Yahoo Finance is unofficial.** Figures are occasionally wrong or stale,
   and coverage of Indian mid and small caps is patchy. The Audit tab exists
   so you can check what was fetched against the filings.
+- **Segment data is not automatic.** It is stored for Infosys, Wipro, Apple
+  and Titan (Titan for one quarter only); every other company needs its
+  segments typed in from the annual report. Adding a company to
+  `data/segments.json` takes one entry, and the tests check that it adds up.
+- **Beta has an error bar.** A five-year weekly regression typically explains
+  20-45% of a stock's moves, and the 95% range is often 0.4 points wide. The
+  app shows R-squared and the range next to the number, and flags a weak fit.
+- **Currency translation uses today's rate.** For companies Yahoo reports in
+  a foreign currency, growth reflects the foreign-currency accounts and so
+  excludes currency drift (Infosys's rupee growth is higher than its dollar
+  growth).
+- **Peers are matched on industry and size, not on business model.** Edit the
+  set when the automatic one is wrong.
 - **The Monte Carlo draws independently.** In reality a demand shock and a
   margin shock arrive together, so the real distribution has fatter tails.
   Read the band as a floor on the uncertainty, not a ceiling.

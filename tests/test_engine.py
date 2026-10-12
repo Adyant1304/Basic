@@ -171,19 +171,47 @@ def test_reverse_dcf_returns_none_when_unreachable(setup):
 
 def test_wacc_build(company):
     w = build_wacc(company, risk_free=0.065, erp=0.07)
-    assert w.cost_of_equity == pytest.approx(0.065 + 0.82 * 0.07)
+    assert w.cost_of_equity == pytest.approx(0.065 + company.beta * 0.07)
     assert 0.0 <= w.weight_debt < 0.05        # the sample is nearly debt-free
     assert w.weight_equity + w.weight_debt == pytest.approx(1.0)
     assert w.wacc < w.cost_of_equity + 1e-9
 
 
-def test_beta_is_clamped(company):
+def test_measured_beta_passes_through_untouched(company):
+    """The original build clamped every beta into 0.3-2.5, which hid Yahoo's
+    nonsense readings and gave most Indian stocks the same discount rate. A
+    believable measured beta must now reach the cost of equity unchanged,
+    including values below the old 0.3 floor and above the old 2.5 ceiling."""
+    for b in (0.12, 0.45, 0.86, 1.43, 2.8):
+        company.beta = b
+        w = build_wacc(company)
+        assert w.beta == pytest.approx(b)
+        assert not any("outside" in n for n in w.notes)
+
+
+def test_beta_is_bounded_only_at_extremes_and_says_so(company):
     company.beta = 9.0
-    assert build_wacc(company).beta == 2.5
+    w = build_wacc(company)
+    assert w.beta == 3.5
+    assert any("outside" in n for n in w.notes)       # reported, not silent
+    company.beta = -0.063                              # Yahoo's ITC reading
+    w = build_wacc(company)
+    assert w.beta == 0.10
+    assert any("outside" in n for n in w.notes)
+
+
+def test_missing_beta_falls_back_to_one_with_a_note(company):
     company.beta = None
     w = build_wacc(company)
     assert w.beta == 1.0
-    assert any("Beta" in n for n in w.notes)
+    assert any("beta" in n.lower() for n in w.notes)
+
+
+def test_beta_override_beats_the_company_beta(company):
+    company.beta = 0.9
+    w = build_wacc(company, beta_override=1.3, beta_label="your own input")
+    assert w.beta == pytest.approx(1.3)
+    assert w.beta_label == "your own input"
 
 
 # --------------------------------------------------------------------------

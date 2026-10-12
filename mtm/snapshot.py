@@ -4,7 +4,8 @@
 
 Run it once on a working connection. The app then falls back to these files
 automatically whenever Yahoo is unreachable, which is what you want five
-minutes before a presentation on campus wifi.
+minutes before a presentation on campus wifi. Each run saves the company and
+its peer set, so the Relative value tab works offline too.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from __future__ import annotations
 import sys
 
 from .data import SNAPSHOT_DIR, fetch, save_snapshot
+from .peers import load_peer_set
 
 
 def main(argv: list[str]) -> int:
@@ -24,10 +26,11 @@ def main(argv: list[str]) -> int:
         try:
             c = fetch(ticker, write_snapshot=False)
             path = save_snapshot(c)
-            print(f"  saved  {c.ticker:<14} {c.name[:40]:<42} -> {path.name}")
-            if c.warnings:
-                for w in c.warnings:
-                    print(f"         note: {w}")
+            peers = load_peer_set(c)        # writes its own snapshot
+            print(f"  saved  {c.ticker:<14} {c.name[:34]:<36} -> {path.name}"
+                  f"  ({len(peers['rows'])} peers)")
+            for w in c.warnings:
+                print(f"         note: {w}")
             ok += 1
         except Exception as exc:
             print(f"  FAILED {ticker:<14} {type(exc).__name__}: {exc}")

@@ -81,6 +81,7 @@ class WaccBuild:
     weight_debt: float
     wacc: float
     notes: list[str] = field(default_factory=list)
+    beta_label: str = ""        # which estimate the beta came from
 
 
 @dataclass
@@ -116,20 +117,39 @@ class Projection:
 # WACC
 # --------------------------------------------------------------------------
 
+# Numerical guard on beta, not a modelling opinion. The original build forced
+# every beta into 0.3-2.5, which hid Yahoo's nonsense readings and gave most
+# Indian stocks the same discount rate. Measured betas now pass through as
+# they are; only a value no regression could defend is bounded, and the
+# bound is reported in the WACC notes instead of applied silently.
+BETA_FLOOR = 0.10
+BETA_CEIL = 3.50
+
+
 def build_wacc(c: Company, risk_free: float = 0.0655,
                erp: float = 0.070, beta_override: float | None = None,
-               tax_rate: float | None = None) -> WaccBuild:
+               tax_rate: float | None = None,
+               beta_label: str | None = None) -> WaccBuild:
     """CAPM cost of equity, blended with after-tax cost of debt.
 
     Defaults are India-specific: a ~6.5% 10-year G-sec yield and a ~7.0%
-    equity risk premium. Both are inputs in the UI because both move.
+    equity risk premium. Both are inputs in the UI because both move, and
+    the UI substitutes market-appropriate defaults for non-Indian listings.
     """
     notes: list[str] = []
-    beta = beta_override if beta_override is not None else c.beta
-    if beta is None:
+    raw = beta_override if beta_override is not None else c.beta
+    if raw is None:
         beta = 1.0
-        notes.append("Beta not reported by Yahoo; assumed 1.0.")
-    beta = float(min(max(beta, 0.3), 2.5))
+        notes.append("No beta could be measured or fetched; assumed 1.0.")
+        label = beta_label or "assumed 1.0"
+    else:
+        beta = float(min(max(raw, BETA_FLOOR), BETA_CEIL))
+        label = beta_label or "company beta"
+        if beta != raw:
+            notes.append(
+                f"A beta of {raw:.2f} is outside {BETA_FLOOR:.1f}-{BETA_CEIL:.1f}, "
+                f"a range no stock estimate should leave, so {beta:.2f} was "
+                "used. Check the beta source.")
 
     t = tax_rate if tax_rate is not None else c.effective_tax_rate()
     coe = risk_free + beta * erp
@@ -143,7 +163,40 @@ def build_wacc(c: Company, risk_free: float = 0.0655,
         notes.append("Effectively debt-free, so WACC is the cost of equity.")
 
     wacc = we * coe + wd * cod * (1 - t)
-    return WaccBuild(risk_free, erp, beta, coe, cod, t, we, wd, wacc, notes)
+    return WaccBuild(risk_free, erp, beta, coe, cod, t, we, wd, wacc, notes,
+                     label)
+
+
+# --------------------------------------------------------------------------
+# Is a DCF the right tool at all?
+# --------------------------------------------------------------------------
+
+_BANKLIKE = ("bank", "insurance", "mortgage", "savings")
+
+
+def dcf_suitability(c: Company) -> tuple[bool, str]:
+    """(ok, reason). A free-cash-flow-to-firm DCF breaks for banks.
+
+    For a bank, deposits are the raw material rather than financing, so
+    "debt" is an operating liability and enterprise value is meaningless. The
+    original build ran the model anyway: HDFC Bank came out at an EBIT margin
+    of 100% and a value five times its price. Better to say so than to print
+    a number.
+    """
+    if not c.revenue.latest or c.revenue.latest <= 0:
+        return False, "No positive revenue, so there is nothing to project."
+    if not c.ebit.values:
+        return False, (
+            "Yahoo reports no operating income for this company, which is "
+            "typical of banks, insurers and lenders. Their debt is an "
+            "operating liability, so a free-cash-flow DCF does not apply.")
+    industry = (c.industry or "").lower()
+    if any(k in industry for k in _BANKLIKE):
+        return False, (
+            f"{c.industry} is a financial business. Deposits and premiums are "
+            "raw material, not financing, so enterprise value and free cash "
+            "flow to the firm are not meaningful.")
+    return True, ""
 
 
 # --------------------------------------------------------------------------
@@ -199,8 +252,8 @@ def baseline_assumptions(c: Company, wacc: float,
     s2c = c.sales_to_capital()
     prov.setdefault(
         "sales_to_capital",
-        "median revenue added per rupee reinvested (capex less D&A plus "
-        "working capital)"
+        "median revenue added per unit of currency reinvested (capex less "
+        "D&A plus working capital)"
     )
 
     # Terminal growth cannot exceed the risk-free rate: a company growing
